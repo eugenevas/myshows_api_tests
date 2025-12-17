@@ -1,0 +1,20 @@
+# Виртуальное окружение
+.venv/
+
+# Файлы, созданные Python
+__pycache__/
+*.рус
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+# Файлы, созданные IDE
+.idea/
+.vscode/
+
+# Файлы Allure
+allure-results/
+
+# Переменные окружения
+.env
