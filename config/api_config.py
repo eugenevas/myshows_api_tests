@@ -1,1 +1,1 @@
-BASE_URL = "https://myshows.me/"
+BASE_URL = "http://localhost"
