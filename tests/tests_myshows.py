@@ -38,3 +38,11 @@ class TestGetEndpoint:
             # assert got["status"] == DB_TO_API_STATUS_MAPPING[expected["status"]]
             assert got["status"] == expected["status"]
             assert got["review"] == expected["review"]
+
+class TestPutEndpoint:
+    # Проверка изменения всех полей по отдельности
+    def test_put_episode(self, add_episodes):
+        expected_episodes = add_episodes
+        url_put_episode = BASE_URL + "/api/v1/series/{id}"
+        response = requests.put(url=url_put_episode)
+        assert response.status_code == HTTPStatus.OK
