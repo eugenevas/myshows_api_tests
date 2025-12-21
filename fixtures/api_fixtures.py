@@ -39,5 +39,5 @@ def add_episodes():
         yield test_series
         # После теста очищаем таблицу
         with conn.cursor() as cur:
-            cur.execute("DELETE FROM series;")
+            # cur.execute("DELETE FROM series;")
             conn.commit()
