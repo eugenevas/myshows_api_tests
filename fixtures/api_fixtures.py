@@ -28,6 +28,7 @@ def add_episodes():
         with conn.cursor() as cur:
             # Очищаем полностью таблицу series
             cur.execute("DELETE FROM series;")
+            # conn.commit()
             # Вставляем тестовые данные с переводом статуса в базу
             for s in test_series:
                 cur.execute("""
@@ -40,4 +41,43 @@ def add_episodes():
         # После теста очищаем таблицу
         with conn.cursor() as cur:
             # cur.execute("DELETE FROM series;")
+            conn.commit()
+
+
+@pytest.fixture
+def update_episodes():
+    # Настройки подключения к базе данных
+    conn_params = {
+        'dbname': 'my-shows-rating',
+        'user': 'postgres',
+        'password': '123456',
+        'host': 'localhost',
+        'port': '5432',
+    }
+
+    # Тестовые данные - на входе статус в API-значении
+    test_series = {
+        "name": "Naruto",
+        "photo": "https://media.myshows.me/shows/760/3/e8/3e8e697187b0fdb49941ecf22db5b9b3.jpg",
+        "rating": 7,
+        "status": "Посмотрел",
+        "review": "Тестовый отзыв"
+    }
+
+    with psycopg.connect(**conn_params) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO series (name, photo, rating, status, review) VALUES (%s, %s, %s, %s, %s) RETURNING id;",
+                (test_series["name"], test_series["photo"], test_series["rating"],
+                 API_SERIES_STATUS_TO_DB_MAPPING[test_series["status"]], test_series["review"])
+            )
+            series_id = cur.fetchone()[0]
+            # conn.commit()
+
+    yield series_id
+
+    # Удаляем сериал после теста
+    with psycopg.connect(**conn_params) as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM series WHERE id = %s;", (series_id,))
             conn.commit()
