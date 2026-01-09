@@ -32,19 +32,19 @@
 <br>•insert_series.sql - добаляет сериал через SQL скрипт.
 <br>•series_for_testing.py - массив сериалов для добавления.
 <br>**fixtures:**
-<br>api_fixtures.py - фикстура для подготовки данных для теста.
-<br>settings_db()- фикстура конфигурации
-<br>api_session() - фикстура api_session
-<br>add_series_in_db() - фикстура для добавления сериалов в базу (через SQL)
-<br>add_series_via_api(api_session) - фикстура для добавления сериалов через API (посылает POST-запросы)
+<br>•api_fixtures.py - фикстура для подготовки данных для теста.
+<br>•settings_db()- фикстура конфигурации
+<br>•api_session() - фикстура api_session
+<br>•add_series_in_db() - фикстура для добавления сериалов в базу (через SQL)
+<br>•add_series_via_api(api_session) - фикстура для добавления сериалов через API (посылает POST-запросы)
 <br>**helpers:**
-<br>api_helpers.py - класс для создания сессии
-<br>db_helpers.py - класс DbConnection для создания соединения с БД
-<br>db_mapping.py - маппит статус сериала 
+<br>•api_helpers.py - класс для создания сессии
+<br>•db_helpers.py - класс DbConnection для создания соединения с БД
+<br>•db_mapping.py - маппит статус сериала 
 <br>**tests:**
-<br>tests_myshows.py - тесты
-<br>class TestGetEndpoint - метод test_write_series_in_bd_get_episode() проверяет приходят ли добавленные сериалы.
-<br>Сериалы добавляются с помощью psycopg.
+<br>•tests_myshows.py - тесты
+<br>•class TestGetEndpoint - метод test_write_series_in_bd_get_episode() проверяет приходят ли добавленные сериалы.
+<br>•Сериалы добавляются с помощью psycopg.
 
 
 # Тесты в проекте
