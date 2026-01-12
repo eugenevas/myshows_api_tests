@@ -1,54 +1,43 @@
-from pathlib import Path
-
+import psycopg
+# from psycopg.rows import dict_row
 import pytest
-import requests
-
-from config.api_config import BASE_URL, SERIES_ENDPOINT
-from data.series_for_testing import SERIES_FOR_TEST
-from helpers.api_helpers import ApiSession
-from helpers.db_helpers import DbConnection
-from config.bd_config import Config
-
-
-# 1. Фикстура конфигурации
-@pytest.fixture(scope='session')
-def settings_db():
-    db_conn = DbConnection(Config())
-    with db_conn:
-        yield db_conn
-
-
-# 2. Фикстура api_session
-@pytest.fixture(scope='session')
-def api_session():
-    with requests.Session() as session:
-        yield ApiSession(session, BASE_URL)
-
-
-# 3. Фикстура для добавления сериалов в базу (через SQL)
-@pytest.fixture
-def add_series_in_db(settings_db):
-    with settings_db:
-        settings_db.execute((Path(__file__).parent.parent / "data" / "insert_series.sql").read_text(encoding='utf-8'))
-        yield
-        # После теста — удалить сериалы
-        settings_db.execute((Path(__file__).parent.parent / "data" / "delete_series.sql").read_text(encoding='utf-8'))
-
-
-# 4. Фикстура для добавления сериалов через API (посылает POST-запросы)
-@pytest.fixture
-def add_series_via_api(api_session):
-    created_series_ids_list = []
-    for s in SERIES_FOR_TEST:
-        response = api_session.post(endpoint=SERIES_ENDPOINT, body=s)
-        response.raise_for_status()
-        created_series_ids_list.append(response.json()["id"])
-    yield
-    # Удаление сериалов через API
-    for id_ in created_series_ids_list:
-        api_session.delete(f"{SERIES_ENDPOINT}/{id_}")
-
+from helpers.file_helpers import API_SERIES_STATUS_TO_DB_MAPPING
 
 @pytest.fixture
-def fixture_type(request):
-    request.getfixturevalue(request.param)
+def add_episodes():
+    # Настройки подключения к базе данных
+    conn_params = {
+        'dbname': 'my-shows-rating',
+        'user': 'postgres',
+        'password': '123456',
+        'host': 'localhost',
+        'port': '5432',
+    }
+
+
+
+    # Тестовые данные - на входе статус в API-значении
+    test_series = [
+        {"id": 6, "name": "Наруто", "photo": "https://media.myshows.me/shows/760/3/e8/3e8e697187b0fdb49941ecf22db5b9b3.jpg", "rating": 9, "status": "Смотрю","review": "Отличный сериал"},
+        {"id": 7, "name": "Мандалорец", "photo": "https://media.myshows.me/shows/760/6/61/66124cb92abfa1ae993d66f2e80463fc.jpg", "rating": 9, "status": "Посмотрел", "review": "Эпично"},
+        {"id": 8, "name": "Союз спасения. Время гнева", "photo": "https://media.myshows.me/shows/760/c/64/c6463ee65ae3aeaf071af0f502befc04.jpg", "rating": 8, "status": "Буду смотреть", "review": "Интересный сюжет"}
+    ]
+
+
+    with psycopg.connect(**conn_params) as conn:
+        with conn.cursor() as cur:
+            # Очищаем полностью таблицу series
+            cur.execute("DELETE FROM series;")
+            # Вставляем тестовые данные с переводом статуса в базу
+            for s in test_series:
+                cur.execute("""
+                     INSERT INTO series (id, name, photo, rating, status, review) 
+                     VALUES (%s, %s, %s, %s, %s, %s);
+                 """, (s["id"], s["name"], s["photo"], s["rating"], API_SERIES_STATUS_TO_DB_MAPPING[s["status"]],
+                       s["review"]))
+            conn.commit()
+        yield test_series
+        # После теста очищаем таблицу
+        with conn.cursor() as cur:
+            # cur.execute("DELETE FROM series;")
+            conn.commit()
