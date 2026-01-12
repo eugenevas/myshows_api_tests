@@ -1,0 +1,1 @@
+DELETE FROM public.series WHERE name IN ('Наруто', 'Мандалорец', 'Союз спасения. Время гнева', 'Тоннель');
