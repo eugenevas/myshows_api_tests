@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 import requests
+from psycopg import cursor
 
 from config.api_config import BASE_URL, SERIES_ENDPOINT
 from data.series_for_testing import SERIES_FOR_TEST
@@ -29,10 +30,38 @@ def api_session():
 @pytest.fixture
 def add_series_in_db(settings_db):
     with settings_db:
-        settings_db.execute((Path(__file__).parent.parent / "data" / "insert_series.sql").read_text(encoding='utf-8'))
+        cursor = settings_db.execute(
+            (Path(__file__).parent.parent / "data" / "insert_series.sql").read_text(encoding='utf-8'))
         yield
+        # yield cursor.rowcount # возвращаем количество строк
         # После теста — удалить сериалы
         settings_db.execute((Path(__file__).parent.parent / "data" / "delete_series.sql").read_text(encoding='utf-8'))
+
+
+# В эту фикстуру добавляются сначала 1 сериал, потом 3 сериала
+@pytest.fixture
+def series_in_db(settings_db, request):
+    count = getattr(request, "param", 0)
+    # Очищаем таблицу перед тестом
+    with settings_db:
+        settings_db.execute(
+            (Path(__file__).parent.parent / "data" / "delete_series.sql")
+            .read_text(encoding="utf-8")
+        )
+
+        if count > 0:
+            sql_file_name = f"insert_series_{count}.sql"
+            sql = (Path(__file__).parent.parent / "data" / sql_file_name).read_text(encoding="utf-8")
+
+            settings_db.execute(sql, {"count": count})
+
+        yield count
+
+        # teardown: очищаем таблицу после теста
+        settings_db.execute(
+            (Path(__file__).parent.parent / "data" / "delete_series.sql")
+            .read_text(encoding="utf-8")
+        )
 
 
 # 4. Фикстура для добавления сериалов через API (посылает POST-запросы)

@@ -13,15 +13,17 @@ class DbConnection:
         self.connection = None
 
 
-    def execute(self, sql):
+    def execute(self, sql, params=None):
         cursor = self.connection.cursor()
         try:
             cursor.execute(sql)
         except Exception as err:
             self.connection.rollback()
             print(err)
+            raise
         else:
             self.connection.commit()
+            return cursor
 
 
     def executemany(self, sql):
