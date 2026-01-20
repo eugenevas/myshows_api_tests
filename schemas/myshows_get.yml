@@ -1,0 +1,101 @@
+#type: object
+#required:
+#  - id
+#  - name
+#  - status
+#
+#properties:
+#  id:
+#    type: integer
+#
+#  name:
+#    type: string
+#
+#  photo:
+#    oneOf:
+#      - type: string
+#        format: uri
+#        minLength: 1
+#      - type: "null"
+#
+#  rating:
+#    oneOf:
+#      - type: integer
+#      - type: "null"
+#
+#  status:
+#    type: string
+#    enum:
+#      - "Смотрю"
+#      - "Посмотрел"
+#      - "Буду смотреть"
+#
+#  review:
+#    oneOf:
+#      - type: string
+#      - type: "null"
+#
+#additionalProperties: false
+
+
+#type: array
+#items:
+#  type: object
+#  additionalProperties: false
+#  required:
+#    - id
+#    - name
+#    - status
+#  properties:
+#    id:
+#      type: integer
+#    name:
+#      type: string
+#    photo:
+#      oneOf:
+#        - type: string
+#          format: uri
+#          minLength: 1
+#        - type: null
+#    rating:
+#      oneOf:
+#        - type: integer
+#        - type: null
+#    status:
+#      type: string
+#      enum:
+#        - Смотрю
+#        - Посмотрел
+#        - Буду смотреть
+#    review:
+#      oneOf:
+#        - type: string
+#        - type: null
+
+
+
+type: array
+items:
+  type: object
+  additionalProperties: false
+  required:
+    - id
+    - name
+    - status
+  properties:
+    id:
+      type: integer
+    name:
+      type: string
+    photo:
+      type: ["string", "null"]
+    rating:
+      type: ["integer", "null"]
+    status:
+      type: string
+      enum:
+        - Смотрю
+        - Посмотрел
+        - Буду смотреть
+    review:
+      type: ["string", "null"]
