@@ -2,6 +2,7 @@ from http import HTTPStatus
 
 import pytest
 
+import pytest
 
 from config.api_config import SERIES_ENDPOINT
 from data.series_for_testing import SERIES_FOR_TEST
@@ -13,6 +14,8 @@ from jsonschema import validate
 
 
 DB_TO_API_STATUS_MAPPING = {v: k for k, v in API_SERIES_STATUS_TO_DB_MAPPING.items()}
+
+
 
 
 class TestGetEndpoint:
