@@ -16,7 +16,7 @@ class DbConnection:
     def execute(self, sql, params=None):
         cursor = self.connection.cursor()
         try:
-            cursor.execute(sql)
+            cursor.execute(sql, params)
         except Exception as err:
             self.connection.rollback()
             print(err)
