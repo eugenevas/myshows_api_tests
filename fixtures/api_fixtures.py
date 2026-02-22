@@ -78,7 +78,7 @@ def add_1_series_returning_id_in_db(settings_db):
     #     settings_db.execute((Path(__file__).parent.parent / "data" / "delete_series_1.sql").read_text(encoding='utf-8'))
 # фикстура на добавление одной серии
 
-# 4.Фикстура для добавления сериалов через API (посылает POST-запросы)
+# 4. Фикстура для добавления сериалов через API (посылает POST-запросы)
 @pytest.fixture
 def add_series_via_api(api_session):
     created_series_ids_list = []

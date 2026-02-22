@@ -20,6 +20,7 @@ class DbConnection:
         except Exception as err:
             self.connection.rollback()
             print(err)
+            raise
         else:
             self.connection.commit()
             return cursor
