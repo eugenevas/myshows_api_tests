@@ -1,8 +1,8 @@
 from pathlib import Path
+from tarfile import data_filter
 
 import pytest
 import requests
-from psycopg import cursor
 
 from config.api_config import BASE_URL, SERIES_ENDPOINT
 from data.series_for_testing import SERIES_FOR_TEST
@@ -26,45 +26,59 @@ def api_session():
         yield ApiSession(session, BASE_URL)
 
 
-# 3. Фикстура для добавления сериалов в базу (через SQL)
+# 3. Фикстура для добавления трёх сериалов в базу (через SQL)
 @pytest.fixture
 def add_series_in_db(settings_db):
     with settings_db:
-        cursor = settings_db.execute(
-            (Path(__file__).parent.parent / "data" / "insert_series.sql").read_text(encoding='utf-8'))
+        # settings_db.execute(f"TRUNCATE TABLE public.series")
+
+        settings_db.execute((Path(__file__).parent.parent / "data" / "insert_series_3.sql").read_text(encoding='utf-8'))
+        # series = result.fetchone()
+        # yield dict(series)
         yield
-        # yield cursor.rowcount # возвращаем количество строк
+
         # После теста — удалить сериалы
-        settings_db.execute((Path(__file__).parent.parent / "data" / "delete_series.sql").read_text(encoding='utf-8'))
+        settings_db.execute((Path(__file__).parent.parent / "data" / "delete_series_3.sql").read_text(encoding='utf-8'))
 
 
 # В эту фикстуру добавляются сначала 1 сериал, потом 3 сериала
 @pytest.fixture
-def series_in_db(settings_db, request):
+def add_exact_number_of_series_in_db(settings_db, request):
     count = getattr(request, "param", 0)
     # Очищаем таблицу перед тестом
     with settings_db:
-        settings_db.execute(
-            (Path(__file__).parent.parent / "data" / "delete_series.sql")
-            .read_text(encoding="utf-8")
-        )
+        # settings_db.execute(f"TRUNCATE TABLE public.series")
 
+        # Если количество строк больше 1, то добавляем сериал в таблицу
         if count > 0:
             sql_file_name = f"insert_series_{count}.sql"
-            sql = (Path(__file__).parent.parent / "data" / sql_file_name).read_text(encoding="utf-8")
-
-            settings_db.execute(sql, {"count": count})
+            settings_db.execute((Path(__file__).parent.parent / "data" / sql_file_name).read_text(encoding="utf-8"))
 
         yield count
-
         # teardown: очищаем таблицу после теста
-        settings_db.execute(
-            (Path(__file__).parent.parent / "data" / "delete_series.sql")
-            .read_text(encoding="utf-8")
-        )
+        settings_db.execute(f"TRUNCATE TABLE public.series")
 
 
-# 4. Фикстура для добавления сериалов через API (посылает POST-запросы)
+
+# фикстура на добавление одной серии
+@pytest.fixture
+def add_1_series_returning_id_in_db(settings_db):
+    with settings_db:
+        series_dict = settings_db.execute(
+            (Path(__file__).parent.parent / "data" / "insert_series_1.sql").read_text(encoding='utf-8')
+        ).fetchone()
+        yield series_dict
+        settings_db.execute(f"DELETE FROM public.series WHERE id IN ({series_dict["id"]})")
+
+
+
+    # with settings_db:
+    #     settings_db.execute((Path(__file__).parent.parent / "data" / "insert_series_1.sql").read_text(encoding='utf-8'))
+    #     yield
+    #     settings_db.execute((Path(__file__).parent.parent / "data" / "delete_series_1.sql").read_text(encoding='utf-8'))
+# фикстура на добавление одной серии
+
+# 4.Фикстура для добавления сериалов через API (посылает POST-запросы)
 @pytest.fixture
 def add_series_via_api(api_session):
     created_series_ids_list = []

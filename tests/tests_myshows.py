@@ -2,7 +2,6 @@ from http import HTTPStatus
 
 import pytest
 
-import pytest
 
 from config.api_config import SERIES_ENDPOINT
 from data.series_for_testing import SERIES_FOR_TEST
@@ -14,8 +13,6 @@ from jsonschema import validate
 
 
 DB_TO_API_STATUS_MAPPING = {v: k for k, v in API_SERIES_STATUS_TO_DB_MAPPING.items()}
-
-
 
 
 class TestGetEndpoint:
@@ -38,9 +35,9 @@ class TestGetEndpoint:
                 check.equal(actual["status"], s["status"], f"Status for {s['name']}")
 
 
-    @pytest.mark.parametrize( "series_in_db", [0, 1, 3], indirect=True)
-    def test_compare_series_lines(self, series_in_db, api_session):
-        expected_count = series_in_db
+    @pytest.mark.parametrize( "add_exact_number_of_series_in_db", [0, 1, 3], indirect=True)
+    def test_compare_series_lines(self, add_exact_number_of_series_in_db, api_session):
+        expected_count = add_exact_number_of_series_in_db
 
         response = api_session.get(SERIES_ENDPOINT)
         response.raise_for_status()
@@ -57,24 +54,17 @@ class TestPutEndpoint:
     @pytest.mark.parametrize(
         "field, new_value",
         [
-            ("name", "Наруто"),
+            ("name", "Аватар"),
             ("photo", "https://media.myshows.me/shows/760/9/93/9930aab53a0e8b5176a5d13d530511c3.jpg"),
             ("rating", 10),
             ("status", "Буду смотреть"),
-            ("review", "Отзыыыыв")
+            ("review", "Очередной отзыв")
         ]
     )
-    def test_update_series(self, api_session, settings_db, add_series_in_db, field, new_value):
-        cursor = settings_db.connection.cursor()
-
-        # Получаем сериал из БД
-        cursor.execute("""
-                    SELECT id, name, status, photo, rating, review
-                    FROM public.series
-                    WHERE name = 'Наруто'
-                """)
-        series = dict(cursor.fetchone())
+    def test_update_series(self, api_session, settings_db, add_1_series_returning_id_in_db, field, new_value):
+        series = add_1_series_returning_id_in_db
         series_id = series["id"]
+
 
         # Конвертируем статус из БД в API-формат
         if "status" in series:
@@ -90,11 +80,13 @@ class TestPutEndpoint:
         )
 
         # --- assert API ---
-        assert response.status_code == HTTPStatus.OK, f"Response body: {response.text}"
+        assert response.json()[field] == new_value, f"{response.json()[field]} не соответствует {new_value}"
 
         # --- assert DB ---
-        cursor.execute(f"SELECT {field} FROM public.series WHERE id = %s", (series_id,))
-        db_value = cursor.fetchone()[field]
+        db_value = settings_db.execute(
+            f"SELECT {field} FROM public.series WHERE id = %s", (series_id,)
+        ).fetchone()[field]
+
 
         # Если поле status — конвертируем в API-формат для сравнения
         if field == "status":
